@@ -1,9 +1,8 @@
 # 📊 ChartAlignBench
-Code for "ChartAB: A Benchmark for Chart Grounding &amp; Dense Alignment"
 
 [**📖 Paper**]() | [**📚HuggingFace Dataset**](https://huggingface.co/datasets/umd-zhou-lab/ChartAlignBench)
 
-This repo contains the official evaluation code and dataset for the paper "ChartAlignBench: A Benchmark for Chart Grounding &amp; Dense Alignment"<br>
+This repo contains the official evaluation code and dataset for the paper "ChartAB: A Benchmark for Chart Grounding &amp; Dense Alignment"<br>
 
 ## Highlights
 - 🔥 **9,000+** instances for VLM evaluation on **Dense Chart Grounding** and **Multi-Chart Alignment**.
@@ -17,7 +16,9 @@ This repo contains the official evaluation code and dataset for the paper "Chart
 - 🔎 **Poor grounding/alignment degrade downstream QA**: Precise data grounding and alignment correlate positively with downstream QA accuracy, establishing dense chart understanding as essential for reliable reasoning performance.
 - 🔎 **Scaling law holds for most alignment tasks**: Larger models consistently outperform smaller ones on all but text-style alignment due to JSON generation complexity leading to high number of irregular failures.
 
-## Dataset Introduction
+## Dataset
+
+ChartAB is the first benchmark designed to comprehensively evaluate the dense level understanding of VLMs on charts, focusing on two core content: data (the underlying values visualized by the chart) and attribute (visual attributes impacting chart design such as color, legend position, and text style). The benchmark consists of 9,000+ instances spanning 9 diverse chart types (bar, numbered bar, line, numbered line, 3D bar, box, radar, rose, and multi-axes charts) organized into three evaluation subsets. The **Data Grounding & Alignment** subset contains chart pairs that differ in data. The **Attribute Grounding & Alignment** subset features chart pairs differing in attributes. **Robustness** instance consists of 5 chart pairs where each pair maintains identical data difference but varies in attribute values (color, legend, or text style) across the pairs. 
 
 ## VLMs's Result
 
