@@ -1,9 +1,39 @@
 import Levenshtein
 import numpy as np
+import re
 from scipy.optimize import linear_sum_assignment
+
+from utils.SCRM import csv_eval
 
 # Grounding (csv metric, color: L2 error in RGB space, text style: direct accuracy, legend: correct/incorrect)
 # Robustness
+
+################################
+# DATA GROUNDING (CSV PREDICTION)
+
+def get_data_grounding_score(gt_csv_str, pred_csv_str):
+
+    # remove brackets (like "million")
+    gt_csv_str = re.sub(r'\(.*?\)', '', gt_csv_str).strip()
+    pred_csv_str = re.sub(r'\(.*?\)', '', pred_csv_str).strip()
+
+    pred_csv_str = pred_csv_str.replace("\t", "\\t").replace("\n", "\\n")
+    pred_csv_str += "\\n"
+
+    gt_csv_str = gt_csv_str.replace("\t", "\\t").replace("\n", "\\n")
+    gt_csv_str += "\\n"
+
+    response = csv_eval([gt_csv_str], [pred_csv_str], 0)
+
+    # print(gt_csv_str)
+    # print(pred_csv_str)
+    # print(response)
+
+    # MAP (mean average precision) for high tolerance
+    return round(response[3], 3)
+
+################################
+
 
 ################################
 # DATA ALIGNMENT CALCULATION
