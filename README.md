@@ -22,6 +22,7 @@ ChartAB is the first benchmark designed to comprehensively evaluate the dense le
 
 <p align="left">
   <img src="assets/dataset_examples.png" width="85%">
+  <br>
   <em>Examples of chart pairs in ChartAlignBench.</em>
 </p>
 
