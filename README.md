@@ -29,7 +29,7 @@ ChartAB is the first benchmark designed to comprehensively evaluate the dense le
 
 ## Evaluation Demo
 
-### 1. Create and Activate a Conda Environment
+### 1. Environment
 ```bash
 conda create -n chart_ab python=3.10
 conda activate chart_ab
