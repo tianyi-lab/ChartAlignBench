@@ -33,4 +33,16 @@ ChartAB is the first benchmark designed to comprehensively evaluate the dense le
 ```bash
 conda create -n chart_ab python=3.10
 conda activate chart_ab
-pip install -r requirements.txt  
+pip install -r requirements.txt
+
+### 2. Running the Notebooks
+
+The provided notebooks are **self-contained** and can be executed directly in order of the cells.
+
+| Task Suite | Demo Notebook Path |
+|------|----------------|
+| Data Grounding & Alignment | [`demo_notebooks/data_grounding_alignment`](demo_notebooks/data_grounding_alignment.ipynb) |
+| Attribute Grounding & Alignment — Color | [`demo_notebooks/color_grounding_alignment`](demo_notebooks/color_grounding_alignment.ipynb) |
+| Attribute Grounding & Alignment — Legend | [`demo_notebooks/legend_grounding_alignment`](demo_notebooks/legend_grounding_alignment.ipynb) |
+| Attribute Grounding & Alignment — Text Style | [`demo_notebooks/text_style_grounding_alignment`](demo_notebooks/text_style_grounding_alignment.ipynb) |
+
