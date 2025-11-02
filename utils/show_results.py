@@ -6,7 +6,7 @@ import base64, json
 import re
 
 
-def show_chart_grounding(chart1_img, chart2_img, chart1_gt, chart1_pred, chart2_gt, chart2_pred, chart1_grounding_score, chart2_grounding_score, show_as_table = False):
+def show_chart_grounding(chart1_img, chart2_img, chart1_gt, chart1_pred, chart2_gt, chart2_pred, chart1_grounding_score, chart2_grounding_score, content_type):
     """
     Display two charts side by side, with ground-truth and predicted grounding tables beneath each.
     chart*_img can be file paths or PIL.Image objects.
@@ -47,15 +47,32 @@ def show_chart_grounding(chart1_img, chart2_img, chart1_gt, chart1_pred, chart2_
         return f"<pre style='background:#f8f8f8; padding:8px; border-radius:6px;'>{formatted}</pre>"
 
     
-    chart1_gt_to_display = csv_to_html_table(chart1_gt) if show_as_table else format_json(chart1_gt)
-    chart1_pred_to_display = csv_to_html_table(chart1_pred) if show_as_table else format_json(chart1_pred)
+    chart1_gt_to_display = csv_to_html_table(chart1_gt) if content_type == "data" else format_json(chart1_gt)
+    chart1_pred_to_display = csv_to_html_table(chart1_pred) if content_type == "data" else format_json(chart1_pred)
     
-    chart2_gt_to_display = csv_to_html_table(chart2_gt) if show_as_table else format_json(chart2_gt)
-    chart2_pred_to_display = csv_to_html_table(chart2_pred) if show_as_table else format_json(chart2_pred)
+    chart2_gt_to_display = csv_to_html_table(chart2_gt) if content_type == "data" else format_json(chart2_gt)
+    chart2_pred_to_display = csv_to_html_table(chart2_pred) if content_type == "data" else format_json(chart2_pred)
     
-    chart1_grounding_score_text_to_display = f"Grounding Score = {chart1_grounding_score}"
-    chart2_grounding_score_text_to_display = f"Grounding Score = {chart2_grounding_score}"
-    
+
+    chart1_grounding_score_text_to_display = None
+    chart2_grounding_score_text_to_display = None
+
+    if content_type == "data":
+        chart1_grounding_score_text_to_display = f"Grounding Metric (CSV Precision) = {chart1_grounding_score}"
+        chart2_grounding_score_text_to_display = f"Grounding Metric (CSV Precision) = {chart2_grounding_score}"
+    elif content_type == "legend":
+        chart1_grounding_score_text_to_display = ""
+        chart2_grounding_score_text_to_display = ""
+    elif content_type == "color":
+        chart1_grounding_score_text_to_display = f"Grounding Metric (RGB L2 distance) = {chart1_grounding_score}"
+        chart2_grounding_score_text_to_display = f"Grounding Metric (RGB L2 distance) = {chart2_grounding_score}"
+    elif content_type == "text_style":
+        chart1_grounding_score_text_to_display = f"Grounding Metric (Accuracy) = {chart1_grounding_score}"
+        chart2_grounding_score_text_to_display = f"Grounding Metric (Accuracy) = {chart2_grounding_score}"
+    else:
+        chart1_grounding_score_text_to_display = "ERROR"
+        chart2_grounding_score_text_to_display = "ERROR"
+
 
     # Convert images to base64 HTML <img>
     chart1_b64 = img_to_base64(chart1_img)

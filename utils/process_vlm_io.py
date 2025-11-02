@@ -27,12 +27,16 @@ def get_chart_pair_images(img):
     return chart_1_img, chart_2_img
 
 
+def process_attr_alignment_response(response, attribute_altered):
+
+    # if color, extra square brackets
+    return response.replace("```json","").replace("```","").replace('[', '').replace(']', '')
+
 def data_alignment_str_to_json(predicted_alignment, num_cell_difference):
 
     predicted_alignment = predicted_alignment.replace('\n', '')
     predicted_alignment = predicted_alignment[(predicted_alignment.find('[')) : (predicted_alignment.rfind(']') + 1)]
-    print(predicted_alignment)
-
+    
     predicted_alignment_json = None
     try:
         # convert string to Python list
@@ -45,3 +49,4 @@ def data_alignment_str_to_json(predicted_alignment, num_cell_difference):
         predicted_alignment_json = {i: dummy_json_element for i in range(num_cell_difference)}
 
     return predicted_alignment_json
+
