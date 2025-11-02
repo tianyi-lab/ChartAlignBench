@@ -5,6 +5,7 @@ from scipy.optimize import linear_sum_assignment
 
 from utils.SCRM import csv_eval
 
+
 # Grounding (csv metric, color: L2 error in RGB space, text style: direct accuracy, legend: correct/incorrect)
 # Robustness
 
@@ -38,14 +39,14 @@ def get_data_grounding_csv_precision(gt_csv_str, pred_csv_str):
 ################################
 # COLOR GROUNDING (L2 distance in RGB space)
 
-def hex_to_rgb(h):
+def hex_to_rgb_g(h):
     """Convert hex color (e.g. '#00aaff') to RGB array."""
     h = h.lstrip('#')
     return np.array([int(h[i:i+2], 16) for i in (0, 2, 4)])
 
 def rgb_l2(c1, c2):
     """Compute L2 distance between two hex colors."""
-    return np.linalg.norm(hex_to_rgb(c1) - hex_to_rgb(c2))
+    return np.linalg.norm(hex_to_rgb_g(c1) - hex_to_rgb_g(c2))
 
 def levenshtein_sim(a, b):
     """Normalized Levenshtein similarity between two strings."""
@@ -111,8 +112,8 @@ def get_color_grounding_distance(gt, pred, threshold=0.5, penalty_value=441.67):
             avg_with_penalty = penalty_value  # all unmatched
 
         return {
-            "avg_matched_l2": avg_matched,
-            "avg_with_penalty": avg_with_penalty,
+            "avg_matched_l2": round(avg_matched, 3),
+            "avg_with_penalty": round(avg_with_penalty, 3),
             "matched_pairs": matched_pairs,
             "distances": distances,
         }
@@ -206,82 +207,113 @@ def compute_grounding_metrics(ground_truth, pred, content_type):
 
 ################################
 # DATA ALIGNMENT CALCULATION
+
 # -----------------------------
 # Helper Functions
 # -----------------------------
+
+# If value in string form (contain %, or '$' currency), extract float value
+def get_float_val(string_val):
+
+    float_val = None
+    try:    
+        string_val_final = string_val.replace("%", "").replace("$", "")
+        float_val = eval(string_val_final)
+    except:
+        float_val = float('inf')
+
+    return float_val
+
 def remove_units_in_brackets(s):
+    """Remove units inside parentheses, e.g., 'Height (cm)' -> 'Height'."""
     if not isinstance(s, str):
         return str(s)
-    import re
     return re.sub(r'\(.*?\)', '', s).strip()
 
-def get_float_val(val):
-    try:
-        return float(str(val).replace(',', '').strip())
-    except:
-        return float('inf')
 
 def compute_name_similarity(gt_json, gr_json):
-    row_sim = Levenshtein.ratio(remove_units_in_brackets(gt_json["row name"]).lower(),
-                                remove_units_in_brackets(gr_json["row name"]).lower())
-    col_sim = Levenshtein.ratio(remove_units_in_brackets(gt_json["column name"]).lower(),
-                                remove_units_in_brackets(gr_json["column name"]).lower())
-    return (row_sim + col_sim) / 2.0  # simple average
+    """Compute row and column name similarity separately."""
+    row_sim = Levenshtein.ratio(
+        remove_units_in_brackets(gt_json["row name"]).lower(),
+        remove_units_in_brackets(gr_json["row name"]).lower()
+    )
+    col_sim = Levenshtein.ratio(
+        remove_units_in_brackets(gt_json["column name"]).lower(),
+        remove_units_in_brackets(gr_json["column name"]).lower()
+    )
+    return row_sim, col_sim
 
 
 def compute_value_precision(gt_json, gr_json):
-    """Compute how close the numeric values are (0–1 scale)."""
-    # Handle missing values
-    for key in ["value in chart 1", "value in chart 2"]:
-        if gr_json.get(key) is None:
-            gr_json[key] = float('inf')
+    """Compute numeric precision between GT and predicted values.
+    precision = 1 - min(abs(pred - gt)/|gt|, 1)
+    Averaged across 'value in chart 1' and 'value in chart 2'.
+    """
+    keys = ["value in chart 1", "value in chart 2"]
+    precisions = []
 
-    # Convert to float
-    for key in ["value in chart 1", "value in chart 2"]:
-        if isinstance(gt_json[key], str):
-            gt_json[key] = get_float_val(gt_json[key])
-        if isinstance(gr_json[key], str):
-            gr_json[key] = get_float_val(gr_json[key])
+    for key in keys:
+        gt_val = get_float_val(gt_json.get(key)) if isinstance(gt_json.get(key), str) else gt_json.get(key)
+        gr_val = get_float_val(gr_json.get(key)) if isinstance(gr_json.get(key), str) else gr_json.get(key)
 
-    try:
-        diff1 = abs(gr_json["value in chart 1"] - gt_json["value in chart 1"]) / (abs(gt_json["value in chart 1"]) + 1e-8)
-    except:
-        diff1 = 1.0
-    try:
-        diff2 = abs(gr_json["value in chart 2"] - gt_json["value in chart 2"]) / (abs(gt_json["value in chart 2"]) + 1e-8)
-    except:
-        diff2 = 1.0
+        # Handle divide by zero safely
+        if gt_val == 0:
+            diff_ratio = 1.0 if gr_val != 0 else 0.0
+        else:
+            diff_ratio = abs(gr_val - gt_val) / abs(gt_val)
 
-    avg_diff = (diff1 + diff2) / 2.0
-    return max(0.0, 1.0 - avg_diff)  # higher is better
+        precision = 1.0 - min(diff_ratio, 1.0)
+        precisions.append(precision)
+
+    return np.mean(precisions)
 
 
 def compute_similarity_matrix(gt_list, gr_list):
-    """Compute similarity matrix (GT × Generated) for detection (row+col)."""
-    sim_matrix = np.zeros((len(gt_list), len(gr_list)))
-    for i, gt in enumerate(gt_list):
-        for j, gr in enumerate(gr_list):
-            sim_matrix[i, j] = compute_name_similarity(gt, gr)
+    """Compute similarity matrix with (row_sim, col_sim) tuples."""
+    sim_matrix = []
+    for gt in gt_list:
+        row_sims = []
+        for gr in gr_list:
+            row_sims.append(compute_name_similarity(gt, gr))
+        sim_matrix.append(row_sims)
     return sim_matrix
 
 
 def get_best_matching_pairs(sim_matrix):
-    """Use Hungarian algorithm to find best one-to-one matching."""
-    # Convert to cost matrix (since the algorithm minimizes)
-    cost_matrix = 1.0 - sim_matrix
+    """Use Hungarian algorithm to find best one-to-one matching.
+    Uses product (row_sim * col_sim) as combined similarity score.
+    """
+    m, n = len(sim_matrix), len(sim_matrix[0]) if sim_matrix else 0
+    if m == 0 or n == 0:
+        return []
+
+    cost_matrix = np.zeros((m, n))
+    for i in range(m):
+        for j in range(n):
+            row_sim, col_sim = sim_matrix[i][j]
+            cost_matrix[i, j] = 1.0 - (row_sim * col_sim)
+
     row_ind, col_ind = linear_sum_assignment(cost_matrix)
-    return list(zip(row_ind, col_ind))  # (gt_idx, gr_idx)
+    return list(zip(row_ind, col_ind))
 
 
 # -----------------------------
 # Core Scoring Functions
 # -----------------------------
-def compute_detection_score(sim_matrix, threshold=0.8):
-    """Compute F1 score for detection (row+col name similarity)."""
-    m, n = sim_matrix.shape
+def compute_detection_score(sim_matrix, threshold=0.5):
+    """Compute F1 score for detection (both row+col must exceed threshold)."""
+    m, n = len(sim_matrix), len(sim_matrix[0]) if sim_matrix else 0
+    if m == 0 or n == 0:
+        return 0.0, 0, 0, 0, []
+
     pairs = get_best_matching_pairs(sim_matrix)
 
-    TP = sum(sim_matrix[i, j] >= threshold for i, j in pairs)
+    TP = 0
+    for i, j in pairs:
+        row_sim, col_sim = sim_matrix[i][j]
+        if row_sim >= threshold and col_sim >= threshold:
+            TP += 1
+
     FP = n - TP
     FN = m - TP
 
@@ -292,23 +324,18 @@ def compute_detection_score(sim_matrix, threshold=0.8):
     return f1, TP, FP, FN, pairs
 
 
-def compute_precision_score(gt_list, gr_list, pairs, sim_matrix, threshold=0.8):
+def compute_precision_score(gt_list, gr_list, pairs, sim_matrix, threshold=0.5):
     """Compute average value precision for correctly detected pairs."""
     precisions = []
     for i, j in pairs:
-        if sim_matrix[i, j] >= threshold:
+        row_sim, col_sim = sim_matrix[i][j]
+        if row_sim >= threshold and col_sim >= threshold:
             precisions.append(compute_value_precision(gt_list[i], gr_list[j]))
 
-    if len(precisions) == 0:
-        return 0.0
-    return np.mean(precisions)
+    return np.mean(precisions) if precisions else 0.0
 
 
 def get_data_alignment_score(gt_json_dict, gr_json_dict, threshold=0.5, alpha=0.5):
-
-    print(gt_json_dict)
-    print(gr_json_dict)
-
     """Compute detection, precision, and combined alignment scores."""
     gt_list = [gt_json_dict[k] for k in gt_json_dict.keys()]
     gr_list = [gr_json_dict[k] for k in gr_json_dict.keys()]
@@ -319,7 +346,7 @@ def get_data_alignment_score(gt_json_dict, gr_json_dict, threshold=0.5, alpha=0.
 
     total_score = 10 * (alpha * detection_f1 + (1 - alpha) * precision_score)
 
-    return {
+    score_dict = {
         "detection_f1": detection_f1,
         "precision_score": precision_score,
         "total_score": round(total_score, 1),
@@ -328,9 +355,8 @@ def get_data_alignment_score(gt_json_dict, gr_json_dict, threshold=0.5, alpha=0.
         "FN": FN
     }
 
+    return score_dict
 ################################
-
-
 
 
 ################################
@@ -353,6 +379,7 @@ def match_encodings(gt_keys, pred_keys, threshold=0.5):
     Match predicted encodings to GT encodings using Levenshtein ratio.
     Returns mapping: pred_key -> best_gt_key (if above threshold).
     """
+
     matched = {}
     used_gt = set()
     for pk in pred_keys:
@@ -451,7 +478,6 @@ def get_color_alignment_score(gt_json, pred_json, alpha=0.5, threshold=0.5):
 # TEXT ALIGNMENT CALCULATION
 
 # Predefined allowed values
-size_min, size_max = 8, 22
 weight_options_list = ["light", "normal", "bold"]
 fontfamily_options_list = ['sans-serif', 'serif', 'cursive', 'fantasy', 'monospace']
 
@@ -485,13 +511,18 @@ def get_text_style_alignment_score(gt_json, pred_json, alpha=0.5):
         return flat
 
     gt_flat_in = flatten_style_dict(gt_json)
+    pred_flat_in = flatten_style_dict(pred_json)
 
     gt_flat = {}
     for index, (key, value) in enumerate(gt_flat_in.items()):
         if value["initial value"] != value["modified value"]:
             gt_flat[key] = value
 
-    pred_flat = flatten_style_dict(pred_json)
+
+    pred_flat = {}
+    for index, (key, value) in enumerate(pred_flat_in.items()):
+        if value["initial value"] != value["modified value"]:
+            pred_flat[key] = value
 
     gt_keys = list(gt_flat.keys())
     pred_keys = list(pred_flat.keys())

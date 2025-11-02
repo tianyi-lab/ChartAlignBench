@@ -31,6 +31,22 @@ attribute_answer_format_dict = {
     "text_style": "{<chart-section-i>: <chart-section-i change json> for chart-section-i in [\"chart title\", \"chart legend\", \"chart axes\", \"chart ticks\"]} where <chart-section-i change json> is json form: {<text characteristic>: {\"initial value\": <value in chart-1>, \"modified value\": <value in chart-2>} for <text characteristic> in [\"size\", \"weight\", \"fontfamily\"]}." 
 }
 
+color_grounding_prompt_template = """You are given a chart image: image_1_tag.
+Identify all distinct visual attributes (e.g., data series, bars, lines, regions, or categories) that have unique colors.
+
+Output the final result strictly as a single JSON object where:
+- Each key is the attribute name (string).
+- Each value is the corresponding color in 6-digit hexadecimal format (e.g., "#FF0000").
+- Do not use a list or array structure.
+- Do not include any explanations or extra text.
+
+Final answer format example:
+{
+  <color 1 encoding name>: <color 1 hex value>,
+  <color 2 encoding name>: <color 2 hex value>,
+}
+"""
+
 PROMPT_TEMPLATES = {
     "data": {
         "grounding": "Given a chart image: image_1_tag\nGenerate the table (csv format) for the chart data. Only output the table directly.",
@@ -38,7 +54,7 @@ PROMPT_TEMPLATES = {
     },
     "attribute": {
         "color": {
-            "grounding": "Can you list the attributes with unique colors in the chart image:- image_1_tag? Mention final answer of form: list[for all attributes 'i' -> {\"attribute\": <attribute 'i' name>, \"color\": <attribute 'i' color <hex color value>>}]. Mention only final answer, no explanation required.",
+            "grounding": color_grounding_prompt_template, #"Can you list the attributes with unique colors in the chart image:- image_1_tag? Mention final answer of form: list[for all attributes 'i' -> {\"attribute\": <attribute 'i' name>, \"color\": <attribute 'i' color <hex color value>>}]. Mention only final answer, no explanation required.",
         },
         "legend": {
             "grounding": "Can you identify the legend position for the chart image:- image_1_tag? Mention answer of form json: {\"legend position\": <position of legend in the chart>}\". Position of legend is not the order of items in legend but instead position of the legend box in chart. There are 9 possible values:- ['upper right', 'upper left', 'lower left', 'lower right', 'center left', 'center right', 'lower center', 'upper center', 'center'].",
