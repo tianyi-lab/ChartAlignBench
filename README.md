@@ -38,9 +38,9 @@ pip install -r requirements.txt
 
 ### 2. Running the Notebooks
 
-The provided notebooks are **self-contained** and can be executed directly in order of the cells.
+The provided jupyter notebooks are **self-contained** and can be executed directly in order of the cells.
 
-| Task Suite | Demo Notebook Path |
+| Task Suite | Demo Notebook Link |
 |------|----------------|
 | Data Grounding & Alignment | [`demo_notebooks/data_grounding_alignment`](demo_notebooks/data_grounding_alignment.ipynb) |
 | Attribute Grounding & Alignment — Color | [`demo_notebooks/color_grounding_alignment`](demo_notebooks/color_grounding_alignment.ipynb) |
