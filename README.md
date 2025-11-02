@@ -38,7 +38,7 @@ pip install -r requirements.txt
 
 ### 2. Running the Notebooks
 
-The provided jupyter notebooks are **self-contained** and can be executed directly in order of the cells.
+The provided jupyter notebooks for corresponding tasks can be executed directly in order of the cells.
 
 | Task Suite | Demo Notebook Link |
 |------|----------------|
