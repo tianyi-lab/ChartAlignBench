@@ -1,8 +1,12 @@
 from IPython.display import display, HTML
-import pandas as pd
-import io
-import base64, json
 
+import pandas as pd
+import numpy as np
+
+import io
+from io import BytesIO
+
+import base64, json
 import re
 
 
@@ -19,7 +23,6 @@ def show_chart_grounding(chart1_img, chart2_img, chart1_gt, chart1_pred, chart2_
             with open(img, "rb") as f:
                 data = f.read()
         else:  # PIL Image
-            from io import BytesIO
             buf = BytesIO()
             img.save(buf, format="PNG")
             data = buf.getvalue()
@@ -129,7 +132,6 @@ def show_chart_alignment(
             with open(img, "rb") as f:
                 data = f.read()
         else:  # PIL.Image
-            from io import BytesIO
             buf = BytesIO()
             img.save(buf, format="PNG")
             data = buf.getvalue()
@@ -175,3 +177,57 @@ def show_chart_alignment(
     """
 
     display(HTML(html))
+
+
+def show_chart_robustness(ds_with_images, predictions, scores, gt_alignment, mean_score, std_score):
+    html_content = f"""
+    <style>
+        .container {{ font-family: Arial, sans-serif; margin: 20px; }}
+        .summary {{ background: #f0f0f0; padding: 15px; border-radius: 5px; margin-bottom: 20px; }}
+        .pair-container {{ border: 2px solid #ddd; margin: 20px 0; padding: 15px; border-radius: 8px; }}
+        .image-pair {{ display: flex; gap: 20px; margin: 15px 0; }}
+        .image-pair img {{ max-width: 45%; height: auto; }}
+        .json-box {{ background: #f9f9f9; padding: 10px; border-left: 3px solid #4CAF50; margin: 10px 0; font-family: monospace;}}
+        .score {{ font-size: 18px; font-weight: bold; color: #2196F3; }}
+        .gt-box {{ background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; font-family: monospace;}}
+    </style>
+    
+    <div class="container">
+        <h1>Alignment Evaluation Results</h1>
+        
+        <div class="summary">
+            <h4><strong>Robustness Score (Data Alignment for set of chart pairs over Attribute Variation): </strong> <span class="score">{std_score:.2f}</span></h4>
+        </div>
+        
+        <div class="gt-box">
+            <h2>Ground Truth Alignment</h2>
+            <pre>{json.dumps(gt_alignment, indent=2)}</pre>
+        </div>
+    """
+    
+    for i in range(len(ds_with_images)):
+        # Convert image to base64 for embedding
+        img = ds_with_images[i]['image_pair']
+        buffered = BytesIO()
+        img.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        
+        html_content += f"""
+        <div class="pair-container">
+            <h2>Image Pair {i+1}</h2>
+            
+            <div class="image-pair">
+                <img src="data:image/png;base64,{img_str}" style="max-width:100%; border:1px solid #ccc; border-radius:8px;" alt="Image Pair {i+1}">
+            </div>
+            
+            <div class="json-box">
+                <h3>Prediction Alignment</h3>
+                <pre>{json.dumps(predictions[i], indent=2)}</pre>
+            </div>
+            
+            <p><strong>Data Alignment Score:</strong> <span class="score">{scores[i]:.2f}</span></p>
+        </div>
+        """
+    
+    html_content += "</div>"
+    display(HTML(html_content))
