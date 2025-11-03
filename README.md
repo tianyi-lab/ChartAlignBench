@@ -1,6 +1,6 @@
 # 📊 ChartAlignBench
 
-[**📖 Paper**]() | [**📚HuggingFace Dataset**](https://huggingface.co/datasets/umd-zhou-lab/ChartAlignBench)
+[**📖 Paper**](https://arxiv.org/abs/2510.26781) | [**📚HuggingFace Dataset**](https://huggingface.co/datasets/umd-zhou-lab/ChartAlignBench)
 
 This repo contains the official evaluation code and dataset for the paper "ChartAB: A Benchmark for Chart Grounding &amp; Dense Alignment"<br>
 
