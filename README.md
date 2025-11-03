@@ -46,4 +46,4 @@ The provided jupyter notebooks for corresponding tasks can be executed directly 
 | Attribute Grounding & Alignment — Color | [`demo_notebooks/color_grounding_alignment`](demo_notebooks/color_grounding_alignment.ipynb) |
 | Attribute Grounding & Alignment — Legend | [`demo_notebooks/legend_grounding_alignment`](demo_notebooks/legend_grounding_alignment.ipynb) |
 | Attribute Grounding & Alignment — Text Style | [`demo_notebooks/text_style_grounding_alignment`](demo_notebooks/text_style_grounding_alignment.ipynb) |
-
+| Robustness (of Data Alignment to Attribute Variations ) | [`demo_notebooks/robustness`](demo_notebooks/robustness.ipynb) |
