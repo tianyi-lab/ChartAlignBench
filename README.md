@@ -33,7 +33,9 @@ ChartAB is the first benchmark designed to comprehensively evaluate the dense le
 ```bash
 conda create -n chart_ab python=3.10
 conda activate chart_ab
+
 pip install -r requirements.txt
+pip install flash-attn==2.5.9.post1 --no-build-isolation
 ```
 
 ### 2. Running the Notebooks
